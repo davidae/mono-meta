@@ -1,0 +1,9 @@
+[services]
+    [services.go]
+    path = "code/go/services/"
+
+    [services.go.extra]
+    path = "code/go/util/"
+
+    [services.ruby]
+    wildcard = "code/ruby/services/*"
