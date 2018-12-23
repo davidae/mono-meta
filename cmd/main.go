@@ -72,9 +72,8 @@ func main() {
 	fmt.Println(diff)
 }
 
-// MonoConfig is the monorepo service configuration
-type MonoConfig struct {
-	Path    string   `json:"path,omitempty"`
-	Exclude []string `json:"exclude,omitempty"`
-	Extra   []string `json:"extra,omitempty"`
+// Config is the monorepo service configuration
+type Config struct {
+	Path  string   `json:"path,omitempty"`
+	Extra []string `json:"exclude,omitempty"`
 }

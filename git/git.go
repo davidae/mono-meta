@@ -61,3 +61,17 @@ func Diff(target, origin string) ([]string, error) {
 
 	return res, nil
 }
+
+func Checkout(branch string) error {
+	out, err := exec.Command(
+		"git",
+		"--git-dir",
+		Directory+"/.git",
+		"checkout",
+	)
+	if err =! nil {
+		return errors.Wrapf(err, "msg: %s", string(out))
+	}
+
+	return nil
+}

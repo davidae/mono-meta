@@ -1,12 +1,6 @@
 {
-    "path": "code/go/services/",
+    "path": "code/go/services",
     "exclude": [
-        "logger"
-    ],
-    "extra": [
-        "code/go/util/",
-        "code/go/vendor/",
-        "util/monit/",
-        "code/go/services/logger"
+        "lib"
     ]
 }
