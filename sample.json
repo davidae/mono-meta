@@ -1,6 +1,8 @@
 {
-    "path": "code/go/services",
+    "path": "services/*/cmd",
     "exclude": [
         "lib"
-    ]
+    ],
+    "build_out_name": "app",
+    "build_cmd": "go build -o $1"
 }

@@ -1,77 +1,64 @@
 package git
 
 import (
+	"fmt"
 	"os"
-	"os/exec"
 	"strings"
 
-	"github.com/pkg/errors"
+	"gopkg.in/src-d/go-git.v4"
+	"gopkg.in/src-d/go-git.v4/plumbing"
 )
 
-// Directory where the repo is cloned into
-const Directory = "/tmp/repo"
-
-// IsAvailable checks is git is available on the executing environement
-func IsAvailable() bool {
-	return exec.Command("git", "version").Run() == nil
+type Repo struct {
+	Repo      *git.Repository
+	Directory string
 }
 
-// Clone clones a repo into a temporary directory
-func Clone(repo string) error {
-	msg, err := exec.Command(
-		"git",
-		"clone",
-		repo,
-		Directory,
-	).CombinedOutput()
+func Clone(url, directory string) (*Repo, error) {
+	r, err := git.PlainClone(directory, false, &git.CloneOptions{
+		URL: url,
+	})
 	if err != nil {
-		return errors.Wrapf(err, "msg: %s", string(msg))
+		return &Repo{}, err
 	}
 
-	return nil
+	return &Repo{Repo: r, Directory: directory}, nil
 }
 
-// Cleanup removes any repos cloned
-func Cleanup() error {
-	return os.RemoveAll(Directory)
-}
-
-// Diff returns the git diff between a target and origin branch
-func Diff(target, origin string) ([]string, error) {
-	out, err := exec.Command(
-		"git",
-		"--git-dir",
-		Directory+"/.git",
-		"diff",
-		"--name-only",
-		target+"..."+origin,
-	).CombinedOutput()
-
+func (r *Repo) Checkout(b string) (*plumbing.Reference, error) {
+	w, err := r.Repo.Worktree()
 	if err != nil {
-		return []string{}, errors.Wrapf(err, "msg: %s", string(out))
+		return nil, err
 	}
 
-	var res []string
-	for _, f := range strings.Split(string(out), "\n") {
-		f = strings.Trim(f, " ")
-		if f != "" {
-			res = append(res, f)
+	refs, err := r.Repo.References()
+	if err != nil {
+		return nil, err
+	}
+
+	var reference *plumbing.Reference
+
+	refs.ForEach(func(r *plumbing.Reference) error {
+		if strings.HasSuffix(r.Name().String(), b) {
+			reference = r
 		}
+		return nil
+	})
+
+	if reference == nil {
+		return nil, fmt.Errorf("could not find ref/branch: %s", b)
 	}
 
-	return res, nil
+	err = w.Checkout(&git.CheckoutOptions{
+		Hash: plumbing.Hash(reference.Hash()),
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	return reference, nil
 }
 
-func Checkout(branch string) error {
-	out, err := exec.Command(
-		"git",
-		"--git-dir",
-		Directory+"/.git",
-		"checkout",
-	)
-	if err =! nil {
-		return errors.Wrapf(err, "msg: %s", string(out))
-	}
-
-	return nil
+func (r *Repo) Cleanup() error {
+	return os.RemoveAll(r.Directory)
 }

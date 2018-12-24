@@ -8,21 +8,24 @@ import (
 
 	"github.com/davidae/mono-builder/git"
 	"github.com/davidae/mono-builder/logger"
+	"github.com/davidae/mono-builder/service"
 )
 
 var (
 	config  string
-	repo    string
+	url     string
 	release string
 	origin  string
 	target  string
 	output  string
 	debug   bool
+
+	directory = "/tmp/hello"
 )
 
 func main() {
 	flag.StringVar(&config, "config", "", "descrip here")
-	flag.StringVar(&repo, "repo", "", "descrip here")
+	flag.StringVar(&url, "url", "", "descrip here")
 	flag.StringVar(&release, "release", "", "descrip here")
 	flag.StringVar(&origin, "origin", "", "descrip here")
 	flag.StringVar(&target, "target", "master", "descrip here")
@@ -33,47 +36,39 @@ func main() {
 
 	logger.Debug(debug)
 
-	if !git.IsAvailable() {
-		logger.Error(nil, "git was not found")
-	}
-
 	d, err := ioutil.ReadFile(config)
 	if err != nil {
 		logger.Error(err, fmt.Sprintf("unable to read file at '%s'", config))
 		return
 	}
 
-	var cfg MonoConfig
+	var cfg service.ServiceConfig
 	if err := json.Unmarshal(d, &cfg); err != nil {
 		logger.Error(err, fmt.Sprintf("unable to unmarshal json file '%s", config))
 		return
 	}
 
-	logger.Log("cloning " + repo)
-	if err := git.Clone(repo); err != nil {
-		logger.Error(err, fmt.Sprintf("failed to clone '%s'", repo))
+	logger.Log("cloning " + url + " into " + directory)
+	r, err := git.Clone(url, directory)
+	if err != nil {
+		fmt.Printf("err!!! %s\n", err)
 		return
 	}
 
 	defer func() {
 		logger.Log("cleaning up")
-		if err := git.Cleanup(); err != nil {
+		if err := r.Cleanup(); err != nil {
 			logger.Error(err, fmt.Sprintf("failed to clean up temp folder"))
 			return
 		}
 	}()
 
-	diff, err := git.Diff(target, origin)
+	ser, err := service.Get(r, cfg, origin)
 	if err != nil {
-		logger.Error(err, "diff failed")
+		fmt.Printf("err!!! %s\n", err)
 		return
 	}
 
-	fmt.Println(diff)
-}
+	fmt.Printf("service: %#v\n", ser)
 
-// Config is the monorepo service configuration
-type Config struct {
-	Path  string   `json:"path,omitempty"`
-	Extra []string `json:"exclude,omitempty"`
 }
