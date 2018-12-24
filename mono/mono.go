@@ -1,4 +1,4 @@
-package service
+package mono
 
 import (
 	"crypto/md5"
@@ -25,8 +25,8 @@ const (
 	NEW        = comment("NEW")
 )
 
-// ServiceConfig is the monorepo service configuration
-type ServiceConfig struct {
+// Config is the monorepo Service configuration
+type Config struct {
 	Path       string   `json:"path"`
 	Extra      []string `json:"extra"`
 	BuildCMD   string   `json:"build_cmd"`
@@ -48,14 +48,13 @@ type ServiceDiff struct {
 	Compare *Service `json:"compare"`
 }
 
-func Diff(r git.Repo, cfg ServiceConfig, base, compare string) ([]ServiceDiff, error) {
-
-	bas, err := Get(r, cfg, base)
+func Diff(r git.Repo, cfg Config, base, compare string) ([]ServiceDiff, error) {
+	bas, err := GetServices(r, cfg, base)
 	if err != nil {
 		return []ServiceDiff{}, errors.Wrapf(err, "Diff error, failed to get services from %s", base)
 	}
 
-	com, err := Get(r, cfg, compare)
+	com, err := GetServices(r, cfg, compare)
 	if err != nil {
 		return []ServiceDiff{}, errors.Wrapf(err, "Diff error, failed to get services from %s", compare)
 	}
@@ -105,7 +104,8 @@ func Diff(r git.Repo, cfg ServiceConfig, base, compare string) ([]ServiceDiff, e
 	return diffs, nil
 }
 
-func Get(r git.Repo, cfg ServiceConfig, reference string) ([]*Service, error) {
+// GetServices returns all services for a given reference
+func GetServices(r git.Repo, cfg Config, reference string) ([]*Service, error) {
 	ref, err := r.Checkout(reference)
 	if err != nil {
 		return nil, err
@@ -153,7 +153,7 @@ func serviceName(absPath, filePath string) string {
 	return ""
 }
 
-func buildPackage(cfg ServiceConfig, dir string) (string, error) {
+func buildPackage(cfg Config, dir string) (string, error) {
 	cmdName, cmdArgs := buildArgs(cfg)
 	if cmdName == "" {
 		return "", fmt.Errorf("invalid build args: '%s'", cfg.BuildCMD)
@@ -169,7 +169,7 @@ func buildPackage(cfg ServiceConfig, dir string) (string, error) {
 	return dir + "/" + DefaultBinaryName, nil
 }
 
-func buildArgs(cfg ServiceConfig) (string, []string) {
+func buildArgs(cfg Config) (string, []string) {
 	arg := strings.Replace(cfg.BuildCMD, "$1", cfg.BinaryName, 1)
 	args := strings.Split(arg, " ")
 	if len(args) == 0 {
