@@ -14,15 +14,15 @@ type Repo struct {
 	Directory string
 }
 
-func Clone(url, directory string) (*Repo, error) {
+func Clone(url, directory string) (Repo, error) {
 	r, err := git.PlainClone(directory, false, &git.CloneOptions{
 		URL: url,
 	})
 	if err != nil {
-		return &Repo{}, err
+		return Repo{}, err
 	}
 
-	return &Repo{Repo: r, Directory: directory}, nil
+	return Repo{Repo: r, Directory: directory}, nil
 }
 
 func (r *Repo) Checkout(b string) (*plumbing.Reference, error) {

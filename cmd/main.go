@@ -63,12 +63,12 @@ func main() {
 		}
 	}()
 
-	ser, err := service.Get(r, cfg, origin)
+	diffs, err := service.Diff(r, cfg, origin, target)
 	if err != nil {
 		fmt.Printf("err!!! %s\n", err)
 		return
 	}
 
-	fmt.Printf("service: %#v\n", ser)
+	fmt.Printf("diffs: %#v\n", diffs)
 
 }
