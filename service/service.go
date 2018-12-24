@@ -27,25 +27,25 @@ const (
 
 // ServiceConfig is the monorepo service configuration
 type ServiceConfig struct {
-	Path       string   `json:"path,omitempty"`
-	Extra      []string `json:"extra,omitempty"`
-	BuildCMD   string   `json:"build_cmd,omitempty"`
-	BinaryName string   `json:"binary_name,omitempty"`
+	Path       string   `json:"path"`
+	Extra      []string `json:"extra"`
+	BuildCMD   string   `json:"build_cmd"`
+	BinaryName string   `json:"binary_name"`
 }
 
 type Service struct {
-	Name      string `json:"name,omitempty"`
-	Path      string `json:"path,omitempty"`
-	Hash      string `json:"hash,omitempty"`
-	Reference string `json:"reference,omitempty"`
+	Name      string `json:"name"`
+	Path      string `json:"path"`
+	Checksum  string `json:"checksum"`
+	Reference string `json:"reference"`
 }
 
 type ServiceDiff struct {
-	Name    string   `json:"name,omitempty"`
-	Changed bool     `json:"changed,omitempty"`
-	Comment comment  `json:"comment,omitempty"`
-	Base    *Service `json:"base,omitempty"`
-	Compare *Service `json:"compare,omitempty"`
+	Name    string   `json:"name"`
+	Changed bool     `json:"changed"`
+	Comment comment  `json:"comment"`
+	Base    *Service `json:"base"`
+	Compare *Service `json:"compare"`
 }
 
 func Diff(r git.Repo, cfg ServiceConfig, base, compare string) ([]ServiceDiff, error) {
@@ -90,7 +90,7 @@ func Diff(r git.Repo, cfg ServiceConfig, base, compare string) ([]ServiceDiff, e
 			d.Comment = REMOVED
 		}
 		if d.Base != nil && d.Compare != nil {
-			if d.Base.Hash != d.Compare.Hash {
+			if d.Base.Checksum != d.Compare.Checksum {
 				d.Changed = true
 				d.Comment = MODIFIED
 			} else {
@@ -119,19 +119,19 @@ func Get(r git.Repo, cfg ServiceConfig, reference string) ([]*Service, error) {
 
 	services := make([]*Service, 0, len(cmdDirs))
 	for _, d := range cmdDirs {
-		filename, err := buildPackage(d)
+		filename, err := buildPackage(cfg, d)
 		if err != nil {
 			return []*Service{}, nil
 		}
 
-		h, err := hashBuild(filename)
+		csum, err := checksumBuild(filename)
 		if err != nil {
 			return []*Service{}, err
 		}
 
 		services = append(services, &Service{
-			Name:      getServiceName(absPath, filename),
-			Hash:      h,
+			Name:      serviceName(absPath, filename),
+			Checksum:  csum,
 			Path:      filename,
 			Reference: ref.Name().String(),
 		})
@@ -140,7 +140,7 @@ func Get(r git.Repo, cfg ServiceConfig, reference string) ([]*Service, error) {
 	return services, nil
 }
 
-func getServiceName(absPath, filePath string) string {
+func serviceName(absPath, filePath string) string {
 	abs := strings.Split(absPath, "/")
 	file := strings.Split(filePath, "/")
 
@@ -153,8 +153,8 @@ func getServiceName(absPath, filePath string) string {
 	return ""
 }
 
-func buildPackage(dir string) (string, error) {
-	cmdName, cmdArgs := buildArgs(DefaultBuilCMD)
+func buildPackage(cfg ServiceConfig, dir string) (string, error) {
+	cmdName, cmdArgs := buildArgs(cfg)
 	if cmdName == "" {
 		return "", fmt.Errorf("invalid build args: '%s'", DefaultBuilCMD)
 	}
@@ -169,8 +169,9 @@ func buildPackage(dir string) (string, error) {
 	return dir + "/" + DefaultBinaryName, nil
 }
 
-func buildArgs(s string) (string, []string) {
-	args := strings.Split(s, " ")
+func buildArgs(cfg ServiceConfig) (string, []string) {
+	arg := strings.Replace(cfg.BuildCMD, "$1", cfg.BinaryName, 1)
+	args := strings.Split(arg, " ")
 	if len(args) == 0 {
 		return "", []string{}
 	}
@@ -178,7 +179,7 @@ func buildArgs(s string) (string, []string) {
 	return args[0], args[1:]
 }
 
-func hashBuild(filename string) (string, error) {
+func checksumBuild(filename string) (string, error) {
 	file, err := ioutil.ReadFile(filename)
 	if err != nil {
 		return "", err
