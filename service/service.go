@@ -15,8 +15,8 @@ import (
 type comment string
 
 const (
-	defaultBuildName = "app"
-	defaultBuilCMD   = "go build -o " + defaultBuildName
+	DefaultBinaryName = "app"
+	DefaultBuilCMD    = "go build -o " + DefaultBinaryName
 
 	UNDEFINED  = comment("UNDEFINED")
 	MODIFIED   = comment("MODIFIED")
@@ -25,11 +25,12 @@ const (
 	NEW        = comment("NEW")
 )
 
-// Config is the monorepo service configuration
+// ServiceConfig is the monorepo service configuration
 type ServiceConfig struct {
-	Path  string   `json:"path"`
-	Extra []string `json:"exclude"`
-	Cmd   string   `json:"cmd"`
+	Path       string   `json:"path,omitempty"`
+	Extra      []string `json:"extra,omitempty"`
+	BuildCMD   string   `json:"build_cmd,omitempty"`
+	BinaryName string   `json:"binary_name,omitempty"`
 }
 
 type Service struct {
@@ -153,9 +154,9 @@ func getServiceName(absPath, filePath string) string {
 }
 
 func buildPackage(dir string) (string, error) {
-	cmdName, cmdArgs := buildArgs(defaultBuilCMD)
+	cmdName, cmdArgs := buildArgs(DefaultBuilCMD)
 	if cmdName == "" {
-		return "", fmt.Errorf("invalid build args: '%s'", defaultBuilCMD)
+		return "", fmt.Errorf("invalid build args: '%s'", DefaultBuilCMD)
 	}
 
 	buildCmd := exec.Command(cmdName, cmdArgs...)
@@ -165,7 +166,7 @@ func buildPackage(dir string) (string, error) {
 		return "", errors.Wrapf(err, "msg: %s", string(out))
 	}
 
-	return dir + "/" + defaultBuildName, nil
+	return dir + "/" + DefaultBinaryName, nil
 }
 
 func buildArgs(s string) (string, []string) {

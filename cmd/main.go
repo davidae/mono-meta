@@ -5,20 +5,18 @@ import (
 	"flag"
 	"fmt"
 	"io/ioutil"
+	"os"
 
 	"github.com/davidae/mono-builder/git"
-	"github.com/davidae/mono-builder/logger"
 	"github.com/davidae/mono-builder/service"
 )
 
 var (
 	config  string
 	url     string
-	release string
-	origin  string
-	target  string
+	base    string
+	compare string
 	output  string
-	debug   bool
 
 	directory = "/tmp/hello"
 )
@@ -26,49 +24,62 @@ var (
 func main() {
 	flag.StringVar(&config, "config", "", "descrip here")
 	flag.StringVar(&url, "url", "", "descrip here")
-	flag.StringVar(&release, "release", "", "descrip here")
-	flag.StringVar(&origin, "origin", "", "descrip here")
-	flag.StringVar(&target, "target", "master", "descrip here")
+	flag.StringVar(&base, "base", "", "descrip here")
+	flag.StringVar(&compare, "compare", "master", "descrip here")
 	flag.StringVar(&output, "output", "stdout", "descrip here")
-	flag.BoolVar(&debug, "debug", false, "desc here")
 
 	flag.Parse()
 
-	logger.Debug(debug)
-
-	d, err := ioutil.ReadFile(config)
+	cfg, err := parseConfig(config)
 	if err != nil {
-		logger.Error(err, fmt.Sprintf("unable to read file at '%s'", config))
+		fmt.Fprintf(os.Stderr, "error: %s", err)
 		return
 	}
 
-	var cfg service.ServiceConfig
-	if err := json.Unmarshal(d, &cfg); err != nil {
-		logger.Error(err, fmt.Sprintf("unable to unmarshal json file '%s", config))
-		return
-	}
-
-	logger.Log("cloning " + url + " into " + directory)
 	r, err := git.Clone(url, directory)
 	if err != nil {
-		fmt.Printf("err!!! %s\n", err)
+		fmt.Fprintf(os.Stderr, "error: %s", err)
 		return
 	}
 
 	defer func() {
-		logger.Log("cleaning up")
 		if err := r.Cleanup(); err != nil {
-			logger.Error(err, fmt.Sprintf("failed to clean up temp folder"))
+			fmt.Fprintf(os.Stderr, "error: %s", err)
 			return
 		}
 	}()
 
-	diffs, err := service.Diff(r, cfg, origin, target)
+	diffs, err := service.Diff(r, cfg, base, compare)
 	if err != nil {
-		fmt.Printf("err!!! %s\n", err)
+		fmt.Fprintf(os.Stderr, "error: %s", err)
 		return
 	}
 
-	fmt.Printf("diffs: %#v\n", diffs)
+	d, err := json.MarshalIndent(diffs, " ", "  ")
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "error: %s", err)
+		return
+	}
 
+	fmt.Fprint(os.Stdout, string(d))
+}
+
+func parseConfig(config string) (service.ServiceConfig, error) {
+	d, err := ioutil.ReadFile(config)
+	if err != nil {
+		return service.ServiceConfig{}, err
+
+	}
+
+	var cfg service.ServiceConfig
+	if err := json.Unmarshal(d, &cfg); err != nil {
+		return service.ServiceConfig{}, err
+	}
+
+	if cfg.BuildCMD == "" || cfg.BinaryName == "" {
+		cfg.BuildCMD = service.DefaultBuilCMD
+		cfg.BinaryName = service.DefaultBinaryName
+	}
+
+	return cfg, nil
 }

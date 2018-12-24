@@ -3,6 +3,6 @@
     "exclude": [
         "lib"
     ],
-    "build_out_name": "app",
+    "binary_name": "app",
     "build_cmd": "go build -o $1"
 }
