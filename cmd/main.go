@@ -16,7 +16,7 @@ var (
 	url     string
 	base    string
 	compare string
-	output  string
+	pretty  bool
 
 	directory = "/tmp/hello"
 )
@@ -24,9 +24,9 @@ var (
 func main() {
 	flag.StringVar(&config, "config", "", "descrip here")
 	flag.StringVar(&url, "url", "", "descrip here")
-	flag.StringVar(&base, "base", "", "descrip here")
-	flag.StringVar(&compare, "compare", "master", "descrip here")
-	flag.StringVar(&output, "output", "stdout", "descrip here")
+	flag.StringVar(&base, "base", "master", "descrip here")
+	flag.StringVar(&compare, "compare", "", "descrip here")
+	flag.BoolVar(&pretty, "pretty", false, "descrip here")
 
 	flag.Parse()
 
@@ -55,13 +55,31 @@ func main() {
 		return
 	}
 
-	d, err := json.MarshalIndent(diffs, " ", "  ")
+	out, err := toJSON(pretty, diffs)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "error: %s", err)
 		return
 	}
 
-	fmt.Fprint(os.Stdout, string(d))
+	fmt.Fprint(os.Stdout, out)
+}
+
+func toJSON(pretty bool, diffs []service.ServiceDiff) (string, error) {
+	if pretty {
+		data, err := json.MarshalIndent(diffs, " ", "  ")
+		if err != nil {
+			return "", err
+		}
+
+		return string(data), nil
+	}
+
+	data, err := json.Marshal(diffs)
+	if err != nil {
+		return "", err
+	}
+
+	return string(data), nil
 }
 
 func parseConfig(config string) (service.ServiceConfig, error) {
