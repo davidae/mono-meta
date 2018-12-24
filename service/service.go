@@ -52,12 +52,12 @@ func Diff(r git.Repo, cfg ServiceConfig, base, compare string) ([]ServiceDiff, e
 
 	bas, err := Get(r, cfg, base)
 	if err != nil {
-		return []ServiceDiff{}, errors.Wrapf(err, "Diff error, failed to get services from base: %s", bas)
+		return []ServiceDiff{}, errors.Wrapf(err, "Diff error, failed to get services from %s", base)
 	}
 
 	com, err := Get(r, cfg, compare)
 	if err != nil {
-		return []ServiceDiff{}, errors.Wrapf(err, "Diff error, failed to get services from compare: %s", com)
+		return []ServiceDiff{}, errors.Wrapf(err, "Diff error, failed to get services from %s", compare)
 	}
 
 	m := map[string]*ServiceDiff{}
@@ -121,7 +121,7 @@ func Get(r git.Repo, cfg ServiceConfig, reference string) ([]*Service, error) {
 	for _, d := range cmdDirs {
 		filename, err := buildPackage(cfg, d)
 		if err != nil {
-			return []*Service{}, nil
+			return []*Service{}, err
 		}
 
 		csum, err := checksumBuild(filename)
@@ -156,14 +156,14 @@ func serviceName(absPath, filePath string) string {
 func buildPackage(cfg ServiceConfig, dir string) (string, error) {
 	cmdName, cmdArgs := buildArgs(cfg)
 	if cmdName == "" {
-		return "", fmt.Errorf("invalid build args: '%s'", DefaultBuilCMD)
+		return "", fmt.Errorf("invalid build args: '%s'", cfg.BuildCMD)
 	}
 
 	buildCmd := exec.Command(cmdName, cmdArgs...)
 	buildCmd.Dir = dir
 	out, err := buildCmd.CombinedOutput()
 	if err != nil {
-		return "", errors.Wrapf(err, "msg: %s", string(out))
+		return "", errors.Wrapf(err, "%s", string(out))
 	}
 
 	return dir + "/" + DefaultBinaryName, nil
