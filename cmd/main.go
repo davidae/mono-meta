@@ -17,7 +17,7 @@ var (
 	compare string
 	pretty  bool
 
-	directory = "/tmp/hello"
+	directory = "helloo"
 )
 
 func main() {
@@ -35,7 +35,9 @@ func main() {
 		return
 	}
 
-	m, err := mono.NewMonoMeta(url, directory)
+	cfg.RepoPath = directory
+
+	m, err := mono.NewMonoMeta(url, cfg)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "error: %s", err)
 		return
@@ -48,7 +50,7 @@ func main() {
 		}
 	}()
 
-	diffs, err := m.Diff(cfg, base, compare)
+	diffs, err := m.Diff(base, compare)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "error: %s", err)
 		return
@@ -81,16 +83,16 @@ func toJSON(pretty bool, diffs []mono.ServiceDiff) (string, error) {
 	return string(data), nil
 }
 
-func parseConfig(config string) (mono.Config, error) {
+func parseConfig(config string) (mono.Cfg, error) {
 	d, err := ioutil.ReadFile(config)
 	if err != nil {
-		return mono.Config{}, err
+		return mono.Cfg{}, err
 
 	}
 
-	var cfg mono.Config
+	var cfg mono.Cfg
 	if err := json.Unmarshal(d, &cfg); err != nil {
-		return mono.Config{}, err
+		return mono.Cfg{}, err
 	}
 
 	if cfg.BuildCMD == "" || cfg.BinaryName == "" {

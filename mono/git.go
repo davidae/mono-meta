@@ -9,7 +9,7 @@ import (
 	"gopkg.in/src-d/go-git.v4/plumbing"
 )
 
-func (m MonoMeta) Checkout(b string) (*plumbing.Reference, error) {
+func (m Meta) Checkout(b string) (*plumbing.Reference, error) {
 	w, err := m.repo.Worktree()
 	if err != nil {
 		return nil, err
@@ -43,6 +43,6 @@ func (m MonoMeta) Checkout(b string) (*plumbing.Reference, error) {
 	return reference, nil
 }
 
-func (m MonoMeta) Close() error {
-	return os.RemoveAll(m.directory)
+func (m Meta) Close() error {
+	return os.RemoveAll(m.config.RepoPath)
 }

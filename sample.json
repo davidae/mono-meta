@@ -1,5 +1,5 @@
 {
-    "path": "services/*/cmd",
+    "service_path": "services/*/cmd",
     "exclude": [
         "lib"
     ],

@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"io/ioutil"
 	"os/exec"
-	"path/filepath"
 	"strings"
 
 	"github.com/pkg/errors"
@@ -15,23 +14,12 @@ import (
 type comment string
 
 const (
-	DefaultBinaryName = "app"
-	DefaultBuilCMD    = "go build -o " + DefaultBinaryName
-
 	UNDEFINED  = comment("UNDEFINED")
 	MODIFIED   = comment("MODIFIED")
 	UNMODIFIED = comment("UNMODIFIED")
 	REMOVED    = comment("REMOVED")
 	NEW        = comment("NEW")
 )
-
-// Config is the monorepo Service configuration
-type Config struct {
-	Path       string   `json:"path"`
-	Extra      []string `json:"extra"`
-	BuildCMD   string   `json:"build_cmd"`
-	BinaryName string   `json:"binary_name"`
-}
 
 type Service struct {
 	Name      string `json:"name"`
@@ -48,29 +36,33 @@ type ServiceDiff struct {
 	Compare *Service `json:"compare"`
 }
 
-type MonoMeta struct {
-	repo      *git.Repository
-	directory string
+type Meta struct {
+	repo   *git.Repository
+	config Cfg
 }
 
-func NewMonoMeta(repoURL, tempDir string) (MonoMeta, error) {
-	r, err := git.PlainClone(tempDir, false, &git.CloneOptions{
+func NewMonoMeta(repoURL string, c Cfg) (Meta, error) {
+	r, err := git.PlainClone(c.RepoPath, false, &git.CloneOptions{
 		URL: repoURL,
 	})
 	if err != nil {
-		return MonoMeta{}, err
+		return Meta{}, err
 	}
 
-	return MonoMeta{repo: r, directory: tempDir}, nil
+	if err = c.Validate(); err != nil {
+		return Meta{}, err
+	}
+
+	return Meta{repo: r, config: c}, nil
 }
 
-func (m MonoMeta) Diff(cfg Config, base, compare string) ([]ServiceDiff, error) {
-	bas, err := m.GetServices(cfg, base)
+func (m Meta) Diff(base, compare string) ([]ServiceDiff, error) {
+	bas, err := m.GetServices(base)
 	if err != nil {
 		return []ServiceDiff{}, errors.Wrapf(err, "Diff error, failed to get services from %s", base)
 	}
 
-	com, err := m.GetServices(cfg, compare)
+	com, err := m.GetServices(compare)
 	if err != nil {
 		return []ServiceDiff{}, errors.Wrapf(err, "Diff error, failed to get services from %s", compare)
 	}
@@ -120,32 +112,31 @@ func (m MonoMeta) Diff(cfg Config, base, compare string) ([]ServiceDiff, error) 
 }
 
 // GetServices returns all services for a given reference
-func (m MonoMeta) GetServices(cfg Config, reference string) ([]*Service, error) {
+func (m Meta) GetServices(reference string) ([]*Service, error) {
 	ref, err := m.Checkout(reference)
 	if err != nil {
 		return nil, err
 	}
 
-	absPath := m.directory + "/" + cfg.Path
-	cmdDirs, err := filepath.Glob(absPath)
+	cmdDirs, err := m.config.ServiceDirs()
 	if err != nil {
-		return nil, err
+		return nil, errors.Wrap(err, "could not find service directories")
 	}
 
 	services := make([]*Service, 0, len(cmdDirs))
 	for _, d := range cmdDirs {
-		filename, err := buildPackage(cfg, d)
+		filename, err := m.buildPackage(d)
 		if err != nil {
-			return []*Service{}, err
+			return []*Service{}, errors.Wrap(err, "could not build package")
 		}
 
 		csum, err := checksumBuild(filename)
 		if err != nil {
-			return []*Service{}, err
+			return []*Service{}, errors.Wrap(err, "could not checksum binary")
 		}
 
 		services = append(services, &Service{
-			Name:      serviceName(absPath, filename),
+			Name:      m.config.ServiceName(filename),
 			Checksum:  csum,
 			Path:      filename,
 			Reference: ref.Name().String(),
@@ -168,30 +159,17 @@ func serviceName(absPath, filePath string) string {
 	return ""
 }
 
-func buildPackage(cfg Config, dir string) (string, error) {
-	cmdName, cmdArgs := buildArgs(cfg)
-	if cmdName == "" {
-		return "", fmt.Errorf("invalid build args: '%s'", cfg.BuildCMD)
-	}
-
+func (m Meta) buildPackage(dir string) (string, error) {
+	cmdName, cmdArgs := m.config.BuildArgs()
 	buildCmd := exec.Command(cmdName, cmdArgs...)
 	buildCmd.Dir = dir
+
 	out, err := buildCmd.CombinedOutput()
 	if err != nil {
 		return "", errors.Wrapf(err, "%s", string(out))
 	}
 
 	return dir + "/" + DefaultBinaryName, nil
-}
-
-func buildArgs(cfg Config) (string, []string) {
-	arg := strings.Replace(cfg.BuildCMD, "$1", cfg.BinaryName, 1)
-	args := strings.Split(arg, " ")
-	if len(args) == 0 {
-		return "", []string{}
-	}
-
-	return args[0], args[1:]
 }
 
 func checksumBuild(filename string) (string, error) {
