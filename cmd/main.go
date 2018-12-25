@@ -83,16 +83,16 @@ func toJSON(pretty bool, diffs []mono.ServiceDiff) (string, error) {
 	return string(data), nil
 }
 
-func parseConfig(config string) (mono.Cfg, error) {
+func parseConfig(config string) (mono.Config, error) {
 	d, err := ioutil.ReadFile(config)
 	if err != nil {
-		return mono.Cfg{}, err
+		return mono.Config{}, err
 
 	}
 
-	var cfg mono.Cfg
+	var cfg mono.Config
 	if err := json.Unmarshal(d, &cfg); err != nil {
-		return mono.Cfg{}, err
+		return mono.Config{}, err
 	}
 
 	if cfg.BuildCMD == "" || cfg.BinaryName == "" {

@@ -38,10 +38,10 @@ type ServiceDiff struct {
 
 type Meta struct {
 	repo   *git.Repository
-	config Cfg
+	config Config
 }
 
-func NewMonoMeta(repoURL string, c Cfg) (Meta, error) {
+func NewMonoMeta(repoURL string, c Config) (Meta, error) {
 	r, err := git.PlainClone(c.RepoPath, false, &git.CloneOptions{
 		URL: repoURL,
 	})
@@ -160,11 +160,11 @@ func serviceName(absPath, filePath string) string {
 }
 
 func (m Meta) buildPackage(dir string) (string, error) {
-	cmdName, cmdArgs := m.config.BuildArgs()
-	buildCmd := exec.Command(cmdName, cmdArgs...)
-	buildCmd.Dir = dir
+	c, args := m.config.BuildArgs()
+	cmd := exec.Command(c, args...)
+	cmd.Dir = dir
 
-	out, err := buildCmd.CombinedOutput()
+	out, err := cmd.CombinedOutput()
 	if err != nil {
 		return "", errors.Wrapf(err, "%s", string(out))
 	}

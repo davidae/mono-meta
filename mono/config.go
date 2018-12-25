@@ -1,6 +1,7 @@
 package mono
 
 import (
+	"errors"
 	"path/filepath"
 	"strings"
 )
@@ -10,8 +11,8 @@ const (
 	DefaultBuilCMD    = "go build -o $1"
 )
 
-// Cfg is the monorepo Service configuration
-type Cfg struct {
+// Config is the monorepo Service configuration
+type Config struct {
 	ServicePath string   `json:"service_path,omitempty"`
 	RepoPath    string   `json:"repo_path,omitempty"`
 	Extra       []string `json:"extra,omitempty"`
@@ -19,11 +20,11 @@ type Cfg struct {
 	BinaryName  string   `json:"binary_name,omitempty"`
 }
 
-func (c Cfg) AbsolutePath() string {
+func (c Config) AbsolutePath() string {
 	return c.RepoPath + "/" + c.ServicePath
 }
 
-func (c Cfg) ServiceDirs() ([]string, error) {
+func (c Config) ServiceDirs() ([]string, error) {
 	cmdDirs, err := filepath.Glob(c.AbsolutePath())
 	if err != nil {
 		return nil, err
@@ -32,7 +33,7 @@ func (c Cfg) ServiceDirs() ([]string, error) {
 	return cmdDirs, nil
 }
 
-func (c Cfg) BuildArgs() (string, []string) {
+func (c Config) BuildArgs() (string, []string) {
 	arg := strings.Replace(c.BuildCMD, "$1", c.BinaryName, 1)
 	args := strings.Split(arg, " ")
 	if len(args) == 0 {
@@ -42,7 +43,7 @@ func (c Cfg) BuildArgs() (string, []string) {
 	return args[0], args[1:]
 }
 
-func (c Cfg) ServiceName(filepath string) string {
+func (c Config) ServiceName(filepath string) string {
 	abs := strings.Split(c.AbsolutePath(), "/")
 	file := strings.Split(filepath, "/")
 
@@ -55,7 +56,11 @@ func (c Cfg) ServiceName(filepath string) string {
 	return ""
 }
 
-func (c Cfg) Validate() error {
+func (c Config) Validate() error {
+	if c.ServicePath == "" {
+		return errors.New("service path is required")
+	}
+
 	if c.BuildCMD != "" && c.BinaryName != "" {
 		return nil
 	}
