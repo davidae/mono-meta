@@ -190,7 +190,7 @@ func (m Meta) buildPackage(dir string) (string, error) {
 		return "", errors.Wrapf(err, "%s", string(out))
 	}
 
-	return dir + "/" + DefaultBinaryName, nil
+	return dir + "/" + m.config.BinaryName, nil
 }
 
 func checksum(filename string) (string, error) {
