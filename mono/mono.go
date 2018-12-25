@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"os/exec"
+	"sort"
 	"strings"
 
 	"github.com/pkg/errors"
@@ -119,6 +120,10 @@ func (m Meta) Diff(base, compare string) ([]ServiceDiff, error) {
 		diffs = append(diffs, *s)
 	}
 
+	sort.Slice(diffs, func(i, j int) bool {
+		return diffs[i].Name < diffs[j].Name
+	})
+
 	return diffs, nil
 }
 
@@ -153,6 +158,10 @@ func (m Meta) GetServices(reference string) ([]*Service, error) {
 			Reference: ref.Name().String(),
 		})
 	}
+
+	sort.Slice(services, func(i, j int) bool {
+		return services[i].Name < services[j].Name
+	})
 
 	return services, nil
 }
