@@ -9,6 +9,7 @@ import (
 	"gopkg.in/src-d/go-git.v4/plumbing"
 )
 
+// Checkout checks out a branch, tag or other reference in the mono-repo
 func (m Meta) Checkout(b string) (*plumbing.Reference, error) {
 	w, err := m.repo.Worktree()
 	if err != nil {
@@ -43,6 +44,7 @@ func (m Meta) Checkout(b string) (*plumbing.Reference, error) {
 	return reference, nil
 }
 
+// Close clears any temporary files or directories creates
 func (m Meta) Close() error {
 	return os.RemoveAll(m.config.RepoPath)
 }

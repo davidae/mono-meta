@@ -95,10 +95,5 @@ func parseConfig(config string) (mono.Config, error) {
 		return mono.Config{}, err
 	}
 
-	if cfg.BuildCMD == "" || cfg.BinaryName == "" {
-		cfg.BuildCMD = mono.DefaultBuilCMD
-		cfg.BinaryName = mono.DefaultBinaryName
-	}
-
 	return cfg, nil
 }

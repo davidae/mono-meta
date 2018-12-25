@@ -11,16 +11,23 @@ import (
 	"gopkg.in/src-d/go-git.v4"
 )
 
+// Comment is a comment about the status (of change) a service
 type comment string
 
 const (
-	UNDEFINED  = comment("UNDEFINED")
-	MODIFIED   = comment("MODIFIED")
+	// UNDEFINED is a constant describing that a service has remained unchanged
+	UNDEFINED = comment("UNDEFINED")
+	// MODIFIED is a constant describing that a service has been modified
+	MODIFIED = comment("MODIFIED")
+	// UNMODIFIED is a constant describing that a service has been not been modified
 	UNMODIFIED = comment("UNMODIFIED")
-	REMOVED    = comment("REMOVED")
-	NEW        = comment("NEW")
+	// REMOVED is a constant describing that a service has been removed
+	REMOVED = comment("REMOVED")
+	// NEW is a constant describing that a service is new
+	NEW = comment("NEW")
 )
 
+// Service is a description of a service
 type Service struct {
 	Name      string `json:"name"`
 	Path      string `json:"path"`
@@ -28,6 +35,7 @@ type Service struct {
 	Reference string `json:"reference"`
 }
 
+// ServiceDiff is a description of a service compared between two references
 type ServiceDiff struct {
 	Name    string   `json:"name"`
 	Changed bool     `json:"changed"`
@@ -36,11 +44,13 @@ type ServiceDiff struct {
 	Compare *Service `json:"compare"`
 }
 
+// Meta represents the metadata of a monorepo
 type Meta struct {
 	repo   *git.Repository
 	config Config
 }
 
+// NewMonoMeta returns a new Meta instance
 func NewMonoMeta(repoURL string, c Config) (Meta, error) {
 	r, err := git.PlainClone(c.RepoPath, false, &git.CloneOptions{
 		URL: repoURL,
@@ -56,6 +66,7 @@ func NewMonoMeta(repoURL string, c Config) (Meta, error) {
 	return Meta{repo: r, config: c}, nil
 }
 
+// Diff returns a slice of services compared across two git references
 func (m Meta) Diff(base, compare string) ([]ServiceDiff, error) {
 	bas, err := m.GetServices(base)
 	if err != nil {
@@ -136,7 +147,7 @@ func (m Meta) GetServices(reference string) ([]*Service, error) {
 		}
 
 		services = append(services, &Service{
-			Name:      m.config.ServiceName(filename),
+			Name:      m.ServiceName(filename),
 			Checksum:  csum,
 			Path:      filename,
 			Reference: ref.Name().String(),
@@ -146,9 +157,10 @@ func (m Meta) GetServices(reference string) ([]*Service, error) {
 	return services, nil
 }
 
-func serviceName(absPath, filePath string) string {
-	abs := strings.Split(absPath, "/")
-	file := strings.Split(filePath, "/")
+// ServiceName returns the name of a service, given it's filepath
+func (m Meta) ServiceName(filepath string) string {
+	abs := strings.Split(m.config.AbsolutePath(), "/")
+	file := strings.Split(filepath, "/")
 
 	for i := range file {
 		if file[i] != abs[i] {
