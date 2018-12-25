@@ -146,7 +146,7 @@ func (m Meta) GetServices(reference string) ([]*Service, error) {
 			return []*Service{}, errors.Wrap(err, "could not build package")
 		}
 
-		csum, err := checksumBuild(filename)
+		csum, err := checksum(filename)
 		if err != nil {
 			return []*Service{}, errors.Wrap(err, "could not checksum binary")
 		}
@@ -193,7 +193,7 @@ func (m Meta) buildPackage(dir string) (string, error) {
 	return dir + "/" + DefaultBinaryName, nil
 }
 
-func checksumBuild(filename string) (string, error) {
+func checksum(filename string) (string, error) {
 	file, err := ioutil.ReadFile(filename)
 	if err != nil {
 		return "", err

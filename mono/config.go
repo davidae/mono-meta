@@ -7,8 +7,8 @@ import (
 )
 
 const (
-	DefaultBinaryName = "app"
-	DefaultBuilCMD    = "go build -o $1"
+	defaultBinaryName = "app"
+	defaultBuilCMD    = "go build -o $1"
 )
 
 // Config is the monorepo Service configuration
@@ -38,8 +38,8 @@ func (c Config) ServiceDirs() ([]string, error) {
 // BuildArgs returns the command and arguments required to build a service
 func (c Config) BuildArgs() (string, []string) {
 	if c.BuildCMD != "" && c.BinaryName != "" {
-		c.BuildCMD = DefaultBuilCMD
-		c.BinaryName = DefaultBinaryName
+		c.BuildCMD = defaultBuilCMD
+		c.BinaryName = defaultBinaryName
 	}
 
 	arg := strings.Replace(c.BuildCMD, "$1", c.BinaryName, 1)
