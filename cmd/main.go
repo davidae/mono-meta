@@ -7,8 +7,7 @@ import (
 	"io/ioutil"
 	"os"
 
-	"github.com/davidae/mono-builder/git"
-	"github.com/davidae/mono-builder/service"
+	"github.com/davidae/mono-builder/mono"
 )
 
 var (
@@ -36,20 +35,20 @@ func main() {
 		return
 	}
 
-	r, err := git.Clone(url, directory)
+	m, err := mono.NewMonoMeta(url, directory)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "error: %s", err)
 		return
 	}
 
 	defer func() {
-		if err := r.Cleanup(); err != nil {
+		if err := m.Close(); err != nil {
 			fmt.Fprintf(os.Stderr, "error: %s", err)
 			return
 		}
 	}()
 
-	diffs, err := service.Diff(r, cfg, base, compare)
+	diffs, err := m.Diff(cfg, base, compare)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "error: %s", err)
 		return
@@ -64,7 +63,7 @@ func main() {
 	fmt.Fprint(os.Stdout, out)
 }
 
-func toJSON(pretty bool, diffs []service.ServiceDiff) (string, error) {
+func toJSON(pretty bool, diffs []mono.ServiceDiff) (string, error) {
 	if pretty {
 		data, err := json.MarshalIndent(diffs, " ", "  ")
 		if err != nil {
@@ -82,21 +81,21 @@ func toJSON(pretty bool, diffs []service.ServiceDiff) (string, error) {
 	return string(data), nil
 }
 
-func parseConfig(config string) (service.ServiceConfig, error) {
+func parseConfig(config string) (mono.Config, error) {
 	d, err := ioutil.ReadFile(config)
 	if err != nil {
-		return service.ServiceConfig{}, err
+		return mono.Config{}, err
 
 	}
 
-	var cfg service.ServiceConfig
+	var cfg mono.Config
 	if err := json.Unmarshal(d, &cfg); err != nil {
-		return service.ServiceConfig{}, err
+		return mono.Config{}, err
 	}
 
 	if cfg.BuildCMD == "" || cfg.BinaryName == "" {
-		cfg.BuildCMD = service.DefaultBuilCMD
-		cfg.BinaryName = service.DefaultBinaryName
+		cfg.BuildCMD = mono.DefaultBuilCMD
+		cfg.BinaryName = mono.DefaultBinaryName
 	}
 
 	return cfg, nil

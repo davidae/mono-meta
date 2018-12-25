@@ -1,4 +1,4 @@
-package git
+package mono
 
 import (
 	"fmt"
@@ -9,29 +9,13 @@ import (
 	"gopkg.in/src-d/go-git.v4/plumbing"
 )
 
-type Repo struct {
-	Repo      *git.Repository
-	Directory string
-}
-
-func Clone(url, directory string) (Repo, error) {
-	r, err := git.PlainClone(directory, false, &git.CloneOptions{
-		URL: url,
-	})
-	if err != nil {
-		return Repo{}, err
-	}
-
-	return Repo{Repo: r, Directory: directory}, nil
-}
-
-func (r *Repo) Checkout(b string) (*plumbing.Reference, error) {
-	w, err := r.Repo.Worktree()
+func (m MonoMeta) Checkout(b string) (*plumbing.Reference, error) {
+	w, err := m.repo.Worktree()
 	if err != nil {
 		return nil, err
 	}
 
-	refs, err := r.Repo.References()
+	refs, err := m.repo.References()
 	if err != nil {
 		return nil, err
 	}
@@ -59,6 +43,6 @@ func (r *Repo) Checkout(b string) (*plumbing.Reference, error) {
 	return reference, nil
 }
 
-func (r *Repo) Cleanup() error {
-	return os.RemoveAll(r.Directory)
+func (m MonoMeta) Close() error {
+	return os.RemoveAll(m.directory)
 }

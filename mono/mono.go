@@ -8,8 +8,8 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/davidae/mono-builder/git"
 	"github.com/pkg/errors"
+	"gopkg.in/src-d/go-git.v4"
 )
 
 type comment string
@@ -48,70 +48,85 @@ type ServiceDiff struct {
 	Compare *Service `json:"compare"`
 }
 
-func Diff(r git.Repo, cfg Config, base, compare string) ([]ServiceDiff, error) {
-	bas, err := GetServices(r, cfg, base)
+type MonoMeta struct {
+	repo      *git.Repository
+	directory string
+}
+
+func NewMonoMeta(repoURL, tempDir string) (MonoMeta, error) {
+	r, err := git.PlainClone(tempDir, false, &git.CloneOptions{
+		URL: repoURL,
+	})
+	if err != nil {
+		return MonoMeta{}, err
+	}
+
+	return MonoMeta{repo: r, directory: tempDir}, nil
+}
+
+func (m MonoMeta) Diff(cfg Config, base, compare string) ([]ServiceDiff, error) {
+	bas, err := m.GetServices(cfg, base)
 	if err != nil {
 		return []ServiceDiff{}, errors.Wrapf(err, "Diff error, failed to get services from %s", base)
 	}
 
-	com, err := GetServices(r, cfg, compare)
+	com, err := m.GetServices(cfg, compare)
 	if err != nil {
 		return []ServiceDiff{}, errors.Wrapf(err, "Diff error, failed to get services from %s", compare)
 	}
 
-	m := map[string]*ServiceDiff{}
+	services := map[string]*ServiceDiff{}
 	for _, c := range com {
-		m[c.Name] = &ServiceDiff{
+		services[c.Name] = &ServiceDiff{
 			Name:    c.Name,
 			Compare: c,
 		}
 	}
 
 	for _, b := range bas {
-		d, ok := m[b.Name]
+		d, ok := services[b.Name]
 		if !ok {
-			m[b.Name] = &ServiceDiff{Base: b}
+			services[b.Name] = &ServiceDiff{Base: b}
 			continue
 		}
 
 		d.Base = b
-
 	}
 
 	diffs := []ServiceDiff{}
-	for _, d := range m {
-		if d.Base == nil && d.Compare != nil {
-			d.Changed = true
-			d.Comment = NEW
+	for _, s := range services {
+		if s.Base == nil && s.Compare != nil {
+			s.Changed = true
+			s.Comment = NEW
 		}
-		if d.Base != nil && d.Compare == nil {
-			d.Changed = true
-			d.Comment = REMOVED
+		if s.Base != nil && s.Compare == nil {
+			s.Changed = true
+			s.Comment = REMOVED
 		}
-		if d.Base != nil && d.Compare != nil {
-			if d.Base.Checksum != d.Compare.Checksum {
-				d.Changed = true
-				d.Comment = MODIFIED
+		if s.Base != nil && s.Compare != nil {
+			if s.Base.Checksum != s.Compare.Checksum {
+				s.Changed = true
+				s.Comment = MODIFIED
 			} else {
-				d.Changed = false
-				d.Comment = UNMODIFIED
+				s.Changed = false
+				s.Comment = UNMODIFIED
 			}
 		}
 
-		diffs = append(diffs, *d)
+		diffs = append(diffs, *s)
 	}
 
 	return diffs, nil
 }
 
 // GetServices returns all services for a given reference
-func GetServices(r git.Repo, cfg Config, reference string) ([]*Service, error) {
-	ref, err := r.Checkout(reference)
+func (m MonoMeta) GetServices(cfg Config, reference string) ([]*Service, error) {
+	ref, err := m.Checkout(reference)
 	if err != nil {
 		return nil, err
 	}
 
-	absPath := r.Directory + "/" + cfg.Path
+	absPath := m.directory + "/" + cfg.Path
 	cmdDirs, err := filepath.Glob(absPath)
 	if err != nil {
 		return nil, err
