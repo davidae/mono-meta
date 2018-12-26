@@ -8,8 +8,9 @@ import (
 	"sort"
 	"strings"
 
+	"github.com/davidae/mono-builder/repo"
+
 	"github.com/pkg/errors"
-	"gopkg.in/src-d/go-git.v4"
 )
 
 // Comment is a comment about the status (of change) a service
@@ -47,24 +48,13 @@ type ServiceDiff struct {
 
 // Meta represents the metadata of a monorepo
 type Meta struct {
-	repo   *git.Repository
+	repo   repo.Repository
 	config Config
 }
 
 // NewMonoMeta returns a new Meta instance
-func NewMonoMeta(repoURL string, c Config) (Meta, error) {
-	r, err := git.PlainClone(c.RepoPath, false, &git.CloneOptions{
-		URL: repoURL,
-	})
-	if err != nil {
-		return Meta{}, err
-	}
-
-	if err = c.Validate(); err != nil {
-		return Meta{}, err
-	}
-
-	return Meta{repo: r, config: c}, nil
+func NewMonoMeta(repo repo.Repository, c Config) (Meta, error) {
+	return Meta{repo: repo, config: c}, nil
 }
 
 // Diff returns a slice of services compared across two git references
@@ -129,7 +119,7 @@ func (m Meta) Diff(base, compare string) ([]ServiceDiff, error) {
 
 // GetServices returns all services for a given reference
 func (m Meta) GetServices(reference string) ([]*Service, error) {
-	ref, err := m.Checkout(reference)
+	ref, err := m.repo.Checkout(reference)
 	if err != nil {
 		return nil, err
 	}
@@ -155,7 +145,7 @@ func (m Meta) GetServices(reference string) ([]*Service, error) {
 			Name:      m.ServiceName(filename),
 			Checksum:  csum,
 			Path:      filename,
-			Reference: ref.Name().String(),
+			Reference: ref,
 		})
 	}
 

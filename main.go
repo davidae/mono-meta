@@ -8,6 +8,7 @@ import (
 	"os"
 
 	"github.com/davidae/mono-builder/mono"
+	"github.com/davidae/mono-builder/repo"
 )
 
 var (
@@ -37,14 +38,20 @@ func main() {
 
 	cfg.RepoPath = directory
 
-	m, err := mono.NewMonoMeta(url, cfg)
+	r, err := repo.NewRemote(url, cfg.RepoPath)
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "error: %s", err)
+		return
+	}
+
+	m, err := mono.NewMonoMeta(r, cfg)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "error: %s", err)
 		return
 	}
 
 	defer func() {
-		if err := m.Close(); err != nil {
+		if err := r.Close(); err != nil {
 			fmt.Fprintf(os.Stderr, "error: %s", err)
 			return
 		}
