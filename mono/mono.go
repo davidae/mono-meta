@@ -5,27 +5,27 @@ import (
 	"fmt"
 	"io/ioutil"
 	"os/exec"
+	"path/filepath"
 	"sort"
 	"strings"
 
+	"github.com/davidae/mono-builder/repo"
+
 	"github.com/pkg/errors"
-	"gopkg.in/src-d/go-git.v4"
 )
 
-// Comment is a comment about the status (of change) a service
+// Comment is a comment about the status a of service
 type comment string
 
 const (
-	// UNDEFINED is a constant describing that a service has remained unchanged
-	UNDEFINED = comment("UNDEFINED")
-	// MODIFIED is a constant describing that a service has been modified
-	MODIFIED = comment("MODIFIED")
-	// UNMODIFIED is a constant describing that a service has been not been modified
-	UNMODIFIED = comment("UNMODIFIED")
-	// REMOVED is a constant describing that a service has been removed
-	REMOVED = comment("REMOVED")
-	// NEW is a constant describing that a service is new
-	NEW = comment("NEW")
+	// MODIFIED is an enum describing that a service has been modified
+	MODIFIED = comment("modified")
+	// UNMODIFIED is an enum describing that a service is unmodified
+	UNMODIFIED = comment("unmodified")
+	// REMOVED is an enum describing that a service has been removed
+	REMOVED = comment("removed")
+	// NEW is an enum describing that a service is new
+	NEW = comment("new")
 )
 
 // Service is a description of a service
@@ -47,36 +47,25 @@ type ServiceDiff struct {
 
 // Meta represents the metadata of a monorepo
 type Meta struct {
-	repo   *git.Repository
+	repo   repo.Repository
 	config Config
 }
 
 // NewMonoMeta returns a new Meta instance
-func NewMonoMeta(repoURL string, c Config) (Meta, error) {
-	r, err := git.PlainClone(c.RepoPath, false, &git.CloneOptions{
-		URL: repoURL,
-	})
-	if err != nil {
-		return Meta{}, err
-	}
-
-	if err = c.Validate(); err != nil {
-		return Meta{}, err
-	}
-
-	return Meta{repo: r, config: c}, nil
+func NewMonoMeta(repo repo.Repository, c Config) *Meta {
+	return &Meta{repo: repo, config: c}
 }
 
 // Diff returns a slice of services compared across two git references
-func (m Meta) Diff(base, compare string) ([]ServiceDiff, error) {
-	bas, err := m.GetServices(base)
+func (m Meta) Diff(base, compare string) ([]*ServiceDiff, error) {
+	bas, err := m.Services(base)
 	if err != nil {
-		return []ServiceDiff{}, errors.Wrapf(err, "Diff error, failed to get services from %s", base)
+		return []*ServiceDiff{}, errors.Wrapf(err, "Diff error, failed to get services from %s", base)
 	}
 
-	com, err := m.GetServices(compare)
+	com, err := m.Services(compare)
 	if err != nil {
-		return []ServiceDiff{}, errors.Wrapf(err, "Diff error, failed to get services from %s", compare)
+		return []*ServiceDiff{}, errors.Wrapf(err, "Diff error, failed to get services from %s", compare)
 	}
 
 	services := map[string]*ServiceDiff{}
@@ -97,7 +86,7 @@ func (m Meta) Diff(base, compare string) ([]ServiceDiff, error) {
 		d.Base = b
 	}
 
-	diffs := []ServiceDiff{}
+	diffs := []*ServiceDiff{}
 	for _, s := range services {
 		if s.Base == nil && s.Compare != nil {
 			s.Changed = true
@@ -117,7 +106,7 @@ func (m Meta) Diff(base, compare string) ([]ServiceDiff, error) {
 			}
 		}
 
-		diffs = append(diffs, *s)
+		diffs = append(diffs, s)
 	}
 
 	sort.Slice(diffs, func(i, j int) bool {
@@ -127,14 +116,14 @@ func (m Meta) Diff(base, compare string) ([]ServiceDiff, error) {
 	return diffs, nil
 }
 
-// GetServices returns all services for a given reference
-func (m Meta) GetServices(reference string) ([]*Service, error) {
-	ref, err := m.Checkout(reference)
+// Services returns all services for a given reference in the monorepo
+func (m Meta) Services(reference string) ([]*Service, error) {
+	ref, err := m.repo.Checkout(reference)
 	if err != nil {
 		return nil, err
 	}
 
-	cmdDirs, err := m.config.ServiceDirs()
+	cmdDirs, err := m.serviceDirs()
 	if err != nil {
 		return nil, errors.Wrap(err, "could not find service directories")
 	}
@@ -152,10 +141,10 @@ func (m Meta) GetServices(reference string) ([]*Service, error) {
 		}
 
 		services = append(services, &Service{
-			Name:      m.ServiceName(filename),
+			Name:      m.serviceName(filename),
 			Checksum:  csum,
 			Path:      filename,
-			Reference: ref.Name().String(),
+			Reference: ref,
 		})
 	}
 
@@ -166,9 +155,8 @@ func (m Meta) GetServices(reference string) ([]*Service, error) {
 	return services, nil
 }
 
-// ServiceName returns the name of a service, given it's filepath
-func (m Meta) ServiceName(filepath string) string {
-	abs := strings.Split(m.config.AbsolutePath(), "/")
+func (m Meta) serviceName(filepath string) string {
+	abs := strings.Split(m.servicesPath(), "/")
 	file := strings.Split(filepath, "/")
 
 	for i := range file {
@@ -190,7 +178,7 @@ func (m Meta) buildPackage(dir string) (string, error) {
 		return "", errors.Wrapf(err, "%s", string(out))
 	}
 
-	return dir + "/" + m.config.BinaryName, nil
+	return dir + "/" + binary, nil
 }
 
 func checksum(filename string) (string, error) {
@@ -200,4 +188,17 @@ func checksum(filename string) (string, error) {
 	}
 
 	return fmt.Sprintf("%x", md5.Sum(file)), nil
+}
+
+func (m Meta) servicesPath() string {
+	return m.repo.AbsPath() + "/" + m.config.ServicePath
+}
+
+func (m Meta) serviceDirs() ([]string, error) {
+	cmdDirs, err := filepath.Glob(m.servicesPath())
+	if err != nil {
+		return nil, err
+	}
+
+	return cmdDirs, nil
 }
