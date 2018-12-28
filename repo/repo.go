@@ -5,6 +5,7 @@ import (
 	"os"
 	"strings"
 
+	"github.com/pkg/errors"
 	"gopkg.in/src-d/go-git.v4"
 	"gopkg.in/src-d/go-git.v4/plumbing"
 )
@@ -54,7 +55,8 @@ func (r *remote) Close() error {
 func NewLocal(path string) (Repository, error) {
 	r, err := git.PlainOpen(path)
 	if err != nil {
-		return nil, err
+		return nil, errors.Wrapf(err, "could not open local git repo (%s)", path)
+
 	}
 
 	return &local{repo: r, path: path}, nil
