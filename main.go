@@ -10,9 +10,9 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
 
-	"github.com/davidae/mono-builder/cmd"
-	"github.com/davidae/mono-builder/mono"
-	"github.com/davidae/mono-builder/repo"
+	"github.com/davidae/mono-meta/cmd"
+	"github.com/davidae/mono-meta/mono"
+	"github.com/davidae/mono-meta/repo"
 )
 
 // Flags

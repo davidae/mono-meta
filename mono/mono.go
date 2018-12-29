@@ -9,7 +9,7 @@ import (
 	"sort"
 	"strings"
 
-	"github.com/davidae/mono-builder/repo"
+	"github.com/davidae/mono-meta/repo"
 
 	"github.com/pkg/errors"
 )
