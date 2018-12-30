@@ -75,7 +75,7 @@ import (
 
 func main() {
   // See repo.NewLocal for using an already existing local git repo
-  repo, err := repo.NewRemote("git@github.com:davidae/service-struct-repo.git", "/tmp/monorepo")
+  repo, err := repo.NewRemote("git@github.com:davidae/service-struct-repo.git")
   if err != nil {
     panic(err)
   }
