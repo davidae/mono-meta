@@ -95,6 +95,7 @@ func (m Meta) Diff(base, compare string) ([]*ServiceDiff, error) {
 		if s.Base != nil && s.Compare == nil {
 			s.Changed = true
 			s.Comment = REMOVED
+			s.Name = s.Base.Name
 		}
 		if s.Base != nil && s.Compare != nil {
 			if s.Base.Checksum != s.Compare.Checksum {
@@ -178,7 +179,7 @@ func (m Meta) buildPackage(dir string) (string, error) {
 		return "", errors.Wrapf(err, "%s", string(out))
 	}
 
-	return dir + "/" + binary, nil
+	return dir + "/" + Binary, nil
 }
 
 func checksum(filename string) (string, error) {
@@ -191,7 +192,7 @@ func checksum(filename string) (string, error) {
 }
 
 func (m Meta) servicesPath() string {
-	return m.repo.AbsPath() + "/" + m.config.ServicePath
+	return m.repo.LocalPath() + "/" + m.config.ServicePath
 }
 
 func (m Meta) serviceDirs() ([]string, error) {

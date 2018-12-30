@@ -8,7 +8,7 @@ import (
 
 const (
 	// Binary is the default name out an outputted binary
-	binary = "app"
+	Binary = "app"
 )
 
 // Config is the monorepo service configuration
@@ -19,7 +19,7 @@ type Config struct {
 
 // BuildArgs returns the command and arguments required to build a service
 func (c Config) BuildArgs() (string, []string) {
-	arg := strings.Replace(c.BuildCMD, "$1", binary, 1)
+	arg := strings.Replace(c.BuildCMD, "$1", Binary, 1)
 	args := strings.Split(arg, " ")
 	if len(args) == 0 {
 		return "", []string{}
