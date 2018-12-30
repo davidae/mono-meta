@@ -1,8 +1,8 @@
 install:
-		go install
+		@go install
 
 build:
-		go build 
+		@go build 
 
-test:
-		go test ./...
+unit-test: 
+		@go test -v ./...

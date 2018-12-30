@@ -58,12 +58,12 @@ func init() {
 	diff.Flags().StringVarP(&base, "base", "b", "master", "branch to be used, as the base, in the comparison of the diff in the monorepo")
 	diff.Flags().StringVarP(&compare, "compare", "c", "", "branch to be used to compare with the base in the monorepo")
 	diff.MarkFlagRequired("compare")
-	diff.MarkFlagRequired("local")
+	diff.MarkFlagRequired("services")
 
 	services = cmd.Services()
 	assignFlags(services.Flags())
 	services.Flags().StringVarP(&ref, "branch", "b", "master", "branch to be used for the summary of all services in the monorepo")
-	diff.MarkFlagRequired("local")
+	services.MarkFlagRequired("services")
 }
 
 func main() {
@@ -139,21 +139,19 @@ func loadConfig(config string, m *mono.Config, r *RepoConfig) error {
 	repoConfig.URL = url
 	repoConfig.Path = local
 
-	if config == "" {
-		return nil
-	}
+	if config != "" {
+		d, err := ioutil.ReadFile(config)
+		if err != nil {
+			return err
+		}
 
-	d, err := ioutil.ReadFile(config)
-	if err != nil {
-		return err
-	}
+		if err := json.Unmarshal(d, m); err != nil {
+			return err
+		}
 
-	if err := json.Unmarshal(d, m); err != nil {
-		return err
-	}
-
-	if err := json.Unmarshal(d, r); err != nil {
-		return err
+		if err := json.Unmarshal(d, r); err != nil {
+			return err
+		}
 	}
 
 	if repoConfig.URL == "" && repoConfig.Path == "" {
@@ -211,7 +209,7 @@ func getMeta(mCfg mono.Config, rCfg RepoConfig) (*mono.Meta, repo.Repository, er
 			return nil, nil, err
 		}
 	} else {
-		r, err = repo.NewRemote(rCfg.URL, rCfg.Path)
+		r, err = repo.NewRemote(rCfg.URL)
 		if err != nil {
 			return nil, nil, err
 		}

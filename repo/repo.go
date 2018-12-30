@@ -10,6 +10,8 @@ import (
 	"gopkg.in/src-d/go-git.v4/plumbing"
 )
 
+const tempDir = "/tmp/monorepo"
+
 // Repository is an interface
 type Repository interface {
 	Checkout(ref string) (string, error)
@@ -28,15 +30,15 @@ type local struct {
 }
 
 // NewRemote clones a remote git repository
-func NewRemote(url, path string) (Repository, error) {
-	r, err := git.PlainClone(path, false, &git.CloneOptions{
+func NewRemote(url string) (Repository, error) {
+	r, err := git.PlainClone(tempDir, false, &git.CloneOptions{
 		URL: url,
 	})
 	if err != nil {
 		return nil, err
 	}
 
-	return &remote{repo: r, path: path}, nil
+	return &remote{repo: r, path: tempDir}, nil
 }
 
 func (r *remote) LocalPath() string {
