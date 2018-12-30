@@ -1,18 +1,19 @@
 # mono-meta
-A CLI and API to retrieve service information from a Go based monorepo with a microservice approach. 
-It's main purpose is to determine which microservices were modified, removed or added from another given reference.
-A reference can be a branch, release or similar.
-Knowing which services changed, added or removed, can simplify the testing and release stages - you can do _selective_ builds, tests and 
-releases on a set of services and avoid doing an _all-or-nothing_ approach on your CI that can take a considerable amount of time. 
+A CLI and API to retrieve service information from a Go based monorepo with a microservice architecture. 
+
+The main purpose is to determine which microservices were modified, removed or added when comparing two different 
+references, a reference can be a branch, release, tag or similar.
+This can simplify the rollout on different stages - you can do _selective_ builds, tests and releases on a set of 
+services and avoid doing an _all-or-nothing_ approach on your CI that can take a considerable amount of time. 
 
 `mono-meta` will build all services locally, after cloning the repo or using an existing local repo, and do a checksum over the binaries. 
-The checksum will determine if there was any changes from one branch to another, `mono-meta` therefore assumes that go builds are _deterministic_. An talk by [davecheney](https://go-talks.appspot.com/github.com/davecheney/presentations/reproducible-builds.slide#1) and a blog post by [filippo.io](https://blog.filippo.io/reproducing-go-binaries-byte-by-byte/) are two very good resources to continue reading about reproducible go builds.
+The checksum will determine if there was any changes from one branch to another, `mono-meta` therefore assumes that go builds are _deterministic_. A talk by [davecheney](https://go-talks.appspot.com/github.com/davecheney/presentations/reproducible-builds.slide#1) and a post by [filippo.io](https://blog.filippo.io/reproducing-go-binaries-byte-by-byte/) are two very good resources to continue reading about reproducible go builds.
 
 ## Install
 ```
 $ go get -u github.com/davidae/mono-meta
 ```
-Or get the latest binary release [here]()
+Or get the latest binary release [here](https://github.com/davidae/mono-meta/releases)
 
 ## Dependencies and other requirements
 * `go1.7` or higher. Go is needed to build binaries for each service on-the-fly to do checksums over the binaries to determine changes.
@@ -66,41 +67,41 @@ Below is a sample how to use the API in a Go application
 package main
 
 import (
-	"fmt"
+  "fmt"
 
-	"github.com/davidae/mono-builder/mono"
-	"github.com/davidae/mono-builder/repo"
+  "github.com/davidae/mono-meta/mono"
+  "github.com/davidae/mono-meta/repo"
 )
 
 func main() {
-	// See repo.NewLocal for using an already existing local git repo
-	repo, err := repo.NewRemote("git@github.com:davidae/service-struct-repo.git", "/tmp/monorepo")
-	if err != nil {
-		panic(err)
-	}
+  // See repo.NewLocal for using an already existing local git repo
+  repo, err := repo.NewRemote("git@github.com:davidae/service-struct-repo.git", "/tmp/monorepo")
+  if err != nil {
+    panic(err)
+  }
 
-	meta := mono.NewMonoMeta(repo, mono.Config{
-		BuildCMD:    "go build -o $1",
-		ServicePath: "services/*/cmd",
-	})
+  meta := mono.NewMonoMeta(repo, mono.Config{
+    BuildCMD:    "go build -o $1",
+    ServicePath: "services/*/cmd",
+  })
 
-	diffs, err := meta.Diff("master", "another-branch")
-	if err != nil {
-		panic(err)
-	}
+  diffs, err := meta.Diff("master", "another-branch")
+  if err != nil {
+    panic(err)
+  }
 
-	fmt.Println(diffs)
+  fmt.Println(diffs)
 
-	services, err := meta.Services("master")
-	if err != nil {
-		panic(err)
-	}
+  services, err := meta.Services("master")
+  if err != nil {
+    panic(err)
+  }
 
-	fmt.Println(services)
+  fmt.Println(services)
 
-	// removes repo locally
-	if err = repo.Close(); err != nil {
-		panic(err)
-	}
+  // removes repo locally
+  if err = repo.Close(); err != nil {
+    panic(err)
+  }
 }
 ```
