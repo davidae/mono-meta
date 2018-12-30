@@ -179,7 +179,7 @@ func (m Meta) buildPackage(dir string) (string, error) {
 		return "", errors.Wrapf(err, "%s", string(out))
 	}
 
-	return dir + "/" + binary, nil
+	return dir + "/" + Binary, nil
 }
 
 func checksum(filename string) (string, error) {
