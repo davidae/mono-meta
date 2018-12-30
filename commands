@@ -1,3 +1,0 @@
-service-diff --config example.json --git git@github.com:davidae/smpl-msg.git --release v11 --target v2.2 --output stdout
-service-diff --config example.json --git git@github.com:davidae/smpl-msg.git --branch x --target z --output plain/stdout/x.json
-
