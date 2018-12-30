@@ -47,7 +47,7 @@ func init() {
 	root = &cobra.Command{Use: "mono-meta", TraverseChildren: true, Args: cobra.ExactValidArgs(1)}
 	assignFlags := func(f *pflag.FlagSet) {
 		f.StringVarP(&file, "file", "f", "", "load configuration file - it will override any existing values set by a flag with same \"key\"")
-		f.StringVarP(&local, "local", "l", "/tmp/monorepo", "local URL of the git repository, use for specifying existing repo or where remote repo is to be cloned")
+		f.StringVarP(&local, "local", "l", "", "local URL of the git repository, use for specifying existing repo or where remote repo is to be cloned")
 		f.StringVarP(&url, "url", "u", "", "remote URL of the git repository, unnecessary to use if the repo is already locally")
 		f.StringVarP(&buildCMD, "build-cmd", "e", "go build -o $1", "build command when building services, a '$1' variable of the outputted binary is required")
 		f.StringVarP(&servicePath, "services", "s", "", "path pattern of where the services resides in the git repository")
@@ -58,10 +58,12 @@ func init() {
 	diff.Flags().StringVarP(&base, "base", "b", "master", "branch to be used, as the base, in the comparison of the diff in the monorepo")
 	diff.Flags().StringVarP(&compare, "compare", "c", "", "branch to be used to compare with the base in the monorepo")
 	diff.MarkFlagRequired("compare")
+	diff.MarkFlagRequired("local")
 
 	services = cmd.Services()
 	assignFlags(services.Flags())
 	services.Flags().StringVarP(&ref, "branch", "b", "master", "branch to be used for the summary of all services in the monorepo")
+	diff.MarkFlagRequired("local")
 }
 
 func main() {

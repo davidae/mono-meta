@@ -13,7 +13,7 @@ import (
 // Repository is an interface
 type Repository interface {
 	Checkout(ref string) (string, error)
-	AbsPath() string
+	LocalPath() string
 	Close() error
 }
 
@@ -39,7 +39,7 @@ func NewRemote(url, path string) (Repository, error) {
 	return &remote{repo: r, path: path}, nil
 }
 
-func (r *remote) AbsPath() string {
+func (r *remote) LocalPath() string {
 	return r.path
 }
 
@@ -62,7 +62,7 @@ func NewLocal(path string) (Repository, error) {
 	return &local{repo: r, path: path}, nil
 }
 
-func (l *local) AbsPath() string {
+func (l *local) LocalPath() string {
 	return l.path
 }
 
