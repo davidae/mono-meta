@@ -5,11 +5,10 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/davidae/mono-meta/repo"
-
 	"github.com/stretchr/testify/assert"
 
 	"github.com/davidae/mono-meta/mono"
+	"github.com/davidae/mono-meta/repo"
 )
 
 const (
