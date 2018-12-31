@@ -12,7 +12,6 @@ import (
 
 	"github.com/davidae/mono-meta/cmd"
 	"github.com/davidae/mono-meta/mono"
-	"github.com/davidae/mono-meta/repo"
 )
 
 // Flags
@@ -197,19 +196,19 @@ func getServices(mCfg mono.Config, rCfg RepoConfig, ref string) ([]*mono.Service
 	return services, nil
 }
 
-func getMeta(mCfg mono.Config, rCfg RepoConfig) (*mono.Meta, repo.Repository, error) {
+func getMeta(mCfg mono.Config, rCfg RepoConfig) (*mono.Meta, mono.Repository, error) {
 	var (
-		r   repo.Repository
+		r   mono.Repository
 		err error
 	)
 
 	if rCfg.URL == "" {
-		r, err = repo.NewLocal(rCfg.Path)
+		r, err = mono.NewLocal(rCfg.Path)
 		if err != nil {
 			return nil, nil, err
 		}
 	} else {
-		r, err = repo.NewRemote(rCfg.URL)
+		r, err = mono.NewRemote(rCfg.URL)
 		if err != nil {
 			return nil, nil, err
 		}
