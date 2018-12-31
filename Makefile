@@ -1,8 +1,15 @@
+.PHONY: dep
+dep:
+		@go get ./...
+
+.PHONY: install
 install:
 		@go install
 
+.PHONY: build
 build:
 		@go build 
 
-unit-test: 
+.PHONY: test
+test: 
 		@go test -v ./...
