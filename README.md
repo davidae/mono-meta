@@ -2,6 +2,7 @@
 A CLI and API to retrieve service information from a Go based monorepo with a microservice architecture. 
 
 [![GoDoc](https://godoc.org/github.com/davidae/mono-meta/mono?status.svg)](https://godoc.org/github.com/davidae/mono-meta/mono)
+[![Build Status](https://travis-ci.org/davidae/mono-meta.svg "Travis CI status")](https://travis-ci.org/davidae/mono-meta)
 
 
 The main purpose is to determine which microservices were modified, removed or added when comparing two different 
