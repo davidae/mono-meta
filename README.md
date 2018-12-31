@@ -1,6 +1,9 @@
 # mono-meta
 A CLI and API to retrieve service information from a Go based monorepo with a microservice architecture. 
 
+[![GoDoc](https://godoc.org/github.com/davidae/mono-meta/mono?status.svg)](https://godoc.org/github.com/davidae/mono-meta/mono)
+
+
 The main purpose is to determine which microservices were modified, removed or added when comparing two different 
 references, a reference can be a branch, release, tag or similar.
 This can simplify the rollout on different stages - you can do _selective_ builds, tests and releases on a set of 

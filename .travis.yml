@@ -1,0 +1,10 @@
+langaugae: go
+go:
+  - "1.11.x"
+  - master
+
+  CGO_ENABLED=0
+install:
+  - go get github.com/BurntSushi/toml
+script:
+  - go test -v ./...
