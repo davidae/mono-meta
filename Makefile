@@ -1,6 +1,6 @@
 .PHONY: dep
 dep:
-		@go get ./...
+		@go get -t ./...
 
 .PHONY: install
 install:
