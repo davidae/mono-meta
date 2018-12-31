@@ -46,10 +46,10 @@ func init() {
 	root = &cobra.Command{Use: "mono-meta", TraverseChildren: true, Args: cobra.ExactValidArgs(1)}
 	assignFlags := func(f *pflag.FlagSet) {
 		f.StringVarP(&file, "file", "f", "", "load configuration file - it will override any existing values set by a flag with same \"key\"")
-		f.StringVarP(&local, "local", "l", "", "local URL of the git repository, use for specifying existing repo or where remote repo is to be cloned")
-		f.StringVarP(&url, "url", "u", "", "remote URL of the git repository, unnecessary to use if the repo is already locally")
-		f.StringVarP(&buildCMD, "build-cmd", "e", "go build -o $1", "build command when building services, a '$1' variable of the outputted binary is required")
-		f.StringVarP(&servicePath, "services", "s", "", "path pattern of where the services resides in the git repository")
+		f.StringVarP(&local, "local", "l", "", "local path of a git repository")
+		f.StringVarP(&url, "url", "u", "", "remote URL of a git repository")
+		f.StringVarP(&buildCMD, "build-cmd", "e", "go build -o $1", "go build command for all services, a '$1' variable of the outputted binary is required")
+		f.StringVarP(&servicePath, "services", "s", "", "path (pattern) where the microservices resides in the monorepo")
 	}
 
 	diff = cmd.Diff()

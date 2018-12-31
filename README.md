@@ -57,12 +57,12 @@ mono-meta services -u git@github.com:davidae/service-struct-repo.git -s 'service
 ### Flags
 These are the common flags for both `diff` and `services` command.
 ```
-  -e, --build-cmd string   build command when building services, a '$1' variable of the outputted binary is required (default "go build -o $1")
+  -e, --build-cmd string   go build command for all services, a '$1' variable of the outputted binary is required (default "go build -o $1")
   -f, --file string        load configuration file - it will override any existing values set by a flag with same "key"
   -h, --help               help for diff
-  -l, --local string       local URL of the git repository, use for specifying existing repo or where remote repo is to be cloned (default "/tmp/monorepo")
-  -s, --services string    path pattern of where the services resides in the git repository
-  -u, --url string         remote URL of the git repository, unnecessary to use if the repo is already locally
+  -l, --local string       local path of a git repository
+  -u, --url string         remote URL of a git repository
+  -s, --services string    path (pattern) where the microservices resides in the monorepo
 ```
 
 ## API
