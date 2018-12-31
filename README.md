@@ -66,7 +66,7 @@ These are the common flags for both `diff` and `services` command.
 ```
 
 ## API
-Below is a sample how to use the API in a Go application
+Below is a sample how to use the API in a Go application. Check out the docs [here](https://godoc.org/github.com/davidae/mono-meta/mono)
 ```go
 package main
 
@@ -74,12 +74,10 @@ import (
   "fmt"
 
   "github.com/davidae/mono-meta/mono"
-  "github.com/davidae/mono-meta/repo"
 )
 
 func main() {
-  // See repo.NewLocal for using an already existing local git repo
-  repo, err := repo.NewRemote("git@github.com:davidae/service-struct-repo.git")
+  repo, err := mono.NewRemote("git@github.com:davidae/service-struct-repo.git")
   if err != nil {
     panic(err)
   }
@@ -103,7 +101,7 @@ func main() {
 
   fmt.Println(services)
 
-  // removes repo locally
+  // cleans up cloned repo
   if err = repo.Close(); err != nil {
     panic(err)
   }
