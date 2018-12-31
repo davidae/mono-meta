@@ -1,4 +1,4 @@
-package repo
+package mono
 
 import (
 	"fmt"
@@ -35,7 +35,7 @@ func NewRemote(url string) (Repository, error) {
 		URL: url,
 	})
 	if err != nil {
-		return nil, err
+		return nil, errors.Wrapf(err, "failed to clone repo into '%s'", tempDir)
 	}
 
 	return &remote{repo: r, path: tempDir}, nil

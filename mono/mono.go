@@ -9,8 +9,6 @@ import (
 	"sort"
 	"strings"
 
-	"github.com/davidae/mono-meta/repo"
-
 	"github.com/pkg/errors"
 )
 
@@ -47,12 +45,12 @@ type ServiceDiff struct {
 
 // Meta represents the metadata of a monorepo
 type Meta struct {
-	repo   repo.Repository
+	repo   Repository
 	config Config
 }
 
 // NewMonoMeta returns a new Meta instance
-func NewMonoMeta(repo repo.Repository, c Config) *Meta {
+func NewMonoMeta(repo Repository, c Config) *Meta {
 	return &Meta{repo: repo, config: c}
 }
 

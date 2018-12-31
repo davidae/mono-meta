@@ -8,7 +8,6 @@ import (
 	"github.com/stretchr/testify/assert"
 
 	"github.com/davidae/mono-meta/mono"
-	"github.com/davidae/mono-meta/repo"
 )
 
 const (
@@ -38,8 +37,8 @@ func (m MockRepo) Close() error {
 func TestMono(t *testing.T) {
 	tests := []struct {
 		scenario string
-		repo     repo.Repository
-		fn       func(*testing.T, repo.Repository)
+		repo     mono.Repository
+		fn       func(*testing.T, mono.Repository)
 	}{
 		{
 			scenario: "test services - success",
@@ -63,7 +62,7 @@ func TestMono(t *testing.T) {
 	}
 }
 
-func testServices(t *testing.T, r repo.Repository) {
+func testServices(t *testing.T, r mono.Repository) {
 	m := mono.NewMonoMeta(
 		r,
 		mono.Config{
@@ -76,16 +75,16 @@ func testServices(t *testing.T, r repo.Repository) {
 	assert.Equal(t, len(services), 2)
 	assert.Equal(t, "service-1", services[0].Name)
 	assert.Equal(t, "../test/mock-repo-1/services/service-1/app", services[0].Path)
-	assert.Equal(t, "bc9ee478b6f14bea43bd1524a3031018", services[0].Checksum)
+	assert.NotEmpty(t, services[0].Checksum)
 	assert.Equal(t, "test/ref/master", services[0].Reference)
 
 	assert.Equal(t, "service-2", services[1].Name)
 	assert.Equal(t, "../test/mock-repo-1/services/service-2/app", services[1].Path)
-	assert.Equal(t, "c585bff21820859a197582e2b4e1f1ce", services[1].Checksum)
+	assert.NotEmpty(t, services[1].Checksum)
 	assert.Equal(t, "test/ref/master", services[1].Reference)
 }
 
-func testDiff(t *testing.T, r repo.Repository) {
+func testDiff(t *testing.T, r mono.Repository) {
 	m := mono.NewMonoMeta(
 		r,
 		mono.Config{
