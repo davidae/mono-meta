@@ -46,8 +46,8 @@ func init() {
 	root = &cobra.Command{Use: "mono-meta", TraverseChildren: true, Args: cobra.ExactValidArgs(1)}
 	assignFlags := func(f *pflag.FlagSet) {
 		f.StringVarP(&file, "file", "f", "", "load configuration file - it will override any existing values set by a flag with same \"key\"")
-		f.StringVarP(&local, "local", "l", "", "local path of a git repository")
-		f.StringVarP(&url, "url", "u", "", "remote URL of a git repository")
+		f.StringVarP(&local, "local", "l", "", "local path to a git repository")
+		f.StringVarP(&url, "url", "u", "", "remote URL to a git repository")
 		f.StringVarP(&buildCMD, "build-cmd", "e", "go build -o $1", "go build command for all services, a '$1' variable of the outputted binary is required")
 		f.StringVarP(&servicePath, "services", "s", "", "path (pattern) where the microservices resides in the monorepo")
 	}
@@ -157,11 +157,7 @@ func loadConfig(config string, m *mono.Config, r *RepoConfig) error {
 		return errors.New("--url or --local flag must be set")
 	}
 
-	if err := monoConfig.Validate(); err != nil {
-		return err
-	}
-
-	return nil
+	return monoConfig.Validate()
 }
 
 func getDiff(mCfg mono.Config, rCfg RepoConfig, base, compare string) ([]*mono.ServiceDiff, error) {
@@ -214,5 +210,5 @@ func getMeta(mCfg mono.Config, rCfg RepoConfig) (*mono.Meta, mono.Repository, er
 		}
 	}
 
-	return mono.NewMonoMeta(r, mCfg), r, nil
+	return mono.NewMeta(r, mCfg), r, nil
 }

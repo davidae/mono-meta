@@ -3,6 +3,7 @@ package mono
 import (
 	"fmt"
 	"os"
+	"regexp"
 	"strings"
 
 	"github.com/pkg/errors"
@@ -10,7 +11,10 @@ import (
 	"gopkg.in/src-d/go-git.v4/plumbing"
 )
 
-const tempDir = "/tmp/monorepo"
+const (
+	tempDir    = "/tmp/mono-meta"
+	repoRegexp = `([^/]+)\.git$`
+)
 
 // Repository is an interface
 type Repository interface {
@@ -31,14 +35,25 @@ type local struct {
 
 // NewRemote clones a remote git repository
 func NewRemote(url string) (Repository, error) {
-	r, err := git.PlainClone(tempDir, false, &git.CloneOptions{
+	re, err := regexp.Compile(repoRegexp)
+	if err != nil {
+		return nil, err
+	}
+
+	matches := re.FindAllString(url, -1)
+	if len(matches) == 0 {
+		return nil, fmt.Errorf("malformed repo URL provided (%s)", url)
+	}
+
+	dir := tempDir + "/" + matches[len(matches)-1]
+	r, err := git.PlainClone(dir, false, &git.CloneOptions{
 		URL: url,
 	})
 	if err != nil {
-		return nil, errors.Wrapf(err, "failed to clone repo into '%s'", tempDir)
+		return nil, errors.Wrapf(err, "failed to clone repo into '%s'", dir)
 	}
 
-	return &remote{repo: r, path: tempDir}, nil
+	return &remote{repo: r, path: dir}, nil
 }
 
 func (r *remote) LocalPath() string {

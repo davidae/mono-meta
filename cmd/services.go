@@ -8,8 +8,8 @@ import (
 func Services() *cobra.Command {
 	return &cobra.Command{
 		Use:   "services",
-		Short: "Get a service summary of all services in a monorepo",
-		Long:  "Get a service summary of all services in a monorepo. ",
+		Short: "Get a summary of all services in a monorepo",
+		Long:  "Get a summary of all services in a monorepo. ",
 		Args:  cobra.ExactValidArgs(0),
 	}
 }

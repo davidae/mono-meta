@@ -1,5 +1,4 @@
 {
-    "local": "/tmp/monorepo",
     "url": "git@github.com:davidae/service-struct-repo.git",
     "cmd": "go build -o $1",
     "services": "services/*/cmd"
