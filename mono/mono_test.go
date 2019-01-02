@@ -63,7 +63,7 @@ func TestMono(t *testing.T) {
 }
 
 func testServices(t *testing.T, r mono.Repository) {
-	m := mono.NewMonoMeta(
+	m := mono.NewMeta(
 		r,
 		mono.Config{
 			BuildCMD:    "go build -o $1",
@@ -85,7 +85,7 @@ func testServices(t *testing.T, r mono.Repository) {
 }
 
 func testDiff(t *testing.T, r mono.Repository) {
-	m := mono.NewMonoMeta(
+	m := mono.NewMeta(
 		r,
 		mono.Config{
 			BuildCMD:    "go build -o $1",

@@ -49,8 +49,8 @@ type Meta struct {
 	config Config
 }
 
-// NewMonoMeta returns a new Meta instance
-func NewMonoMeta(repo Repository, c Config) *Meta {
+// NewMeta returns a new Meta instance
+func NewMeta(repo Repository, c Config) *Meta {
 	return &Meta{repo: repo, config: c}
 }
 
